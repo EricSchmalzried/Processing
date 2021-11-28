@@ -4,6 +4,9 @@ float xposs, yposs, yposm, yposl , yposi;  //starting positions for the starting
 int colorr1 = 255;
 int colorBoardWidth = 3;
 int colorr2, colorg2, colorb2;
+int hism = 0;
+int himed = 0;
+int hilg = 0;
 ArrayList<Integer> reds = new ArrayList<Integer>();
 ArrayList<Integer> greens = new ArrayList<Integer>();
 ArrayList<Integer> blues = new ArrayList<Integer>();
@@ -70,6 +73,11 @@ void opening() {
   text("Medium", xposs, yposm + side);
   text("Large", xposs, yposl + side);
   text("Instructions", xposs, yposi + side);
+  if(timeLimit){
+    text("hi: " + hism, xposs - 3* side, yposs + side);
+    text("hi: " + himed, xposs - 3* side, yposm + side);
+    text("hi: " + hilg, xposs - 3* side, yposl + side);
+  }
 }
 void instruction() {
   fill(0);
@@ -138,18 +146,21 @@ void mouseClicked(){
       timer = 15.0;
       colorBoardWidth = 2;
       starting();
+      small = true;
     }
     else if(mouseX > xposs && mouseX < (xposs + side*6) && mouseY > yposm && mouseY < yposm + side){
         surface.setSize(900, 600);
         timer = 55.0;
         colorBoardWidth = 3;
         starting();
+        medium = true;
     }
     else if(mouseX > xposs && mouseX < (xposs + side*6) && mouseY > yposl && mouseY < yposl + side){
         surface.setSize(1000, 800);
         timer = 180.0;
         colorBoardWidth = 5;
         starting();
+        large = true;
     }
     else if(mouseX > xposs && mouseX < (xposs + side*6) && mouseY > yposi && mouseY < yposi + side){
       instructions = true;
@@ -223,6 +234,9 @@ void speedRun() {
   time = passedTime - savedTime;
 }
 void win() {
+  if (timeLimit){
+    saveScore();
+  }
   surface.setSize(900,600);
   background(122);
   fill(0);
@@ -236,6 +250,7 @@ void win() {
   text("Play again?", 0+side*4, height/2+side*4);
 }
 void finalScore() {
+  saveScore();
   surface.setSize(900,600);
   background(122);
   fill(0);
@@ -243,6 +258,17 @@ void finalScore() {
   text("Score: " + score, 0 + side, height/2 + side);
   textSize(side*2);
   text("Play again?", 0+side*4, height/2+side*4);
+}
+void saveScore(){
+  if(small){
+    hism = score;
+  }
+  if(medium){
+    himed = score;
+  }
+  if(large){
+    hilg = score;
+  }
 }
 void reset() {
 score = 0;
