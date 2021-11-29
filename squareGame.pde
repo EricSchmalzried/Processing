@@ -1,12 +1,16 @@
 int side = 50;        // Width of the shape
 float xpos1, ypos1, xpos2, ypos2, xpos3, ypos3;    // Starting position of shape
 float xposs, yposs, yposm, yposl , yposi;  //starting positions for the starting buttons.
+float tposx, tposy1, tposy2, splitLiney;
 int colorr1 = 255;
-int colorBoardWidth = 3;
+int colorBoardWidth;
 int colorr2, colorg2, colorb2;
 int hism = 0;
 int himed = 0;
 int hilg = 0;
+int hispsm = 0;
+int hispmed = 0;
+int hisplg = 0;
 ArrayList<Integer> reds = new ArrayList<Integer>();
 ArrayList<Integer> greens = new ArrayList<Integer>();
 ArrayList<Integer> blues = new ArrayList<Integer>();
@@ -26,6 +30,7 @@ boolean back = false;
 boolean hasWon = false;
 boolean hasLost = false;
 boolean timeLimit = true;
+boolean split = false;
 
 void setup() 
 {
@@ -70,13 +75,25 @@ void opening() {
   else{
     text("Speedrun", width - xposs * 1.5, yposs + side);
   }
+  if(split){
+    text("Split", width - xposs * 1.5, yposm + side);
+  }
+  else{
+    text("Not Split", width - xposs * 1.5, yposm + side);
+  }
   text("Medium", xposs, yposm + side);
   text("Large", xposs, yposl + side);
   text("Instructions", xposs, yposi + side);
   if(timeLimit){
+    if(split){
+      text("hi: " + hispsm, xposs - 3* side, yposs + side);
+      text("hi: " + hispmed, xposs - 3* side, yposm + side);
+      text("hi: " + hisplg, xposs - 3* side, yposl + side);
+    }else{
     text("hi: " + hism, xposs - 3* side, yposs + side);
     text("hi: " + himed, xposs - 3* side, yposm + side);
     text("hi: " + hilg, xposs - 3* side, yposl + side);
+    }
   }
 }
 void instruction() {
@@ -91,6 +108,9 @@ void instruction() {
 void game(){
   fill(colorr1, 0, 0);
   square(xpos1, ypos1, side);
+  if(split){
+    transferBlocks();
+  }
   if(!block){
     generateBlock();
     if(xpos1 == xpos2 && ypos1 == ypos2){
@@ -105,6 +125,12 @@ void game(){
   fill(0);
   text(score, (width - side * 3)/2, side);
   timePassed();
+  stroke(0);
+  line(width-side*colorBoardWidth, side, width-side*colorBoardWidth, height);
+  if(split){
+    line(0, splitLiney, width-side*colorBoardWidth, splitLiney);
+    transfer();
+  }
   blocks();
   if(winScore == score){
     hasWon = true;
@@ -114,13 +140,13 @@ void keyPressed(){
   if(key == 'a' && xpos1 > 0){
     xpos1 -= side;
   }
-  if(key == 'w' && ypos1 > side){
+  if(key == 'w' && ypos1 > side && (ypos1 > splitLiney || ypos1 < splitLiney)){
     ypos1 -= side;
   }
   if(key == 'd' && xpos1 < width - side*(1+colorBoardWidth)){
     xpos1 += side;
   }
-  if(key == 's' && ypos1 < height - side){
+  if(key == 's' && ypos1 < height - side&& (ypos1 < splitLiney-side || ypos1 > splitLiney-side)){
     ypos1 += side;
   }
 }
@@ -172,14 +198,30 @@ void mouseClicked(){
         timeLimit = true;
       }
     }
+    else if(mouseX > width - xposs * 1.5 && mouseX < (width - xposs * 1.5 + side*5) && mouseY > yposm && mouseY < yposm + side){
+      if(split){
+        split = false;
+      }else{
+        split = true;
+      }
+    }
   }
 }
 void starting(){
   savedTime = millis()/1000.0;
   play = true;
+  if(split && timeLimit){
+    timer *= 1.5;
+  }
   xpos1 = side * int(random(0, width/side - (1  + colorBoardWidth)));
   ypos1 = side * int(random(1, height/side - 1));
   winScore = colorBoardWidth*(height/side-1);
+  if(split){
+    splitLiney = height / 2;
+    tposx = side * int(random(0,width/side - (1+colorBoardWidth)));
+    tposy1 = splitLiney-side;
+    tposy2 = splitLiney;
+  }
 }
 void generateBlock(){
   xpos2 = side * int(random(0, width/side - (1 + colorBoardWidth)));
@@ -188,6 +230,11 @@ void generateBlock(){
   colorg2 = int(random(0, 256));
   colorb2 = int(random(0, 256));
 }
+void transferBlocks(){  
+  fill(255, 165, 0);
+  square(tposx, tposy1, side);
+  square(tposx, tposy2, side);
+}
 void eaten(){
   if(xpos1 == xpos2 && ypos1 == ypos2){
     reds.add(colorr2);
@@ -195,6 +242,14 @@ void eaten(){
     blues.add(colorb2);
     block = false;
     score++;
+  }
+}
+void transfer() {
+  if(xpos1 == tposx && ypos1 == tposy1){
+    ypos1 = tposy2+side;
+  }
+  if(xpos1 == tposx && ypos1 == tposy2){
+    ypos1 = tposy1 - side;
   }
 }
 void blocks(){
@@ -260,14 +315,27 @@ void finalScore() {
   text("Play again?", 0+side*4, height/2+side*4);
 }
 void saveScore(){
-  if(small){
-    hism = score;
+  if(split){
+    if(small){
+      hispsm = score;
+    }
+    else if(medium){
+    hispmed = score;
+    }
+    if(large){
+      hisplg = score;
+    }
   }
-  if(medium){
-    himed = score;
-  }
-  if(large){
-    hilg = score;
+  else{
+    if(small){
+      hism = score;
+    }
+    else if(medium){
+      himed = score;
+    }
+    else if(large){
+      hilg = score;
+    }
   }
 }
 void reset() {
